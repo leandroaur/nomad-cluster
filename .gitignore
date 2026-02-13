@@ -23,3 +23,6 @@ Thumbs.db
 *.key
 id_rsa*
 id_ed25519*
+
+terraform/user-data-client.yaml
+terraform/user-data-server.yaml

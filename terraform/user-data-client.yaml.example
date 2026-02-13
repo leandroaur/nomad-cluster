@@ -1,0 +1,23 @@
+#cloud-config
+hostname: nomad-client-${count.index + 1}
+package_update: true
+package_upgrade: true
+packages:
+  - unzip
+  - curl
+  - docker.io
+
+users:
+  - name: laurelio
+    groups: users,admin,docker
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "REPLACE_WITH_YOUR_PASSWORD_HASH"
+    ssh_authorized_keys:
+      - "REPLACE_WITH_YOUR_PUBLIC_SSH_KEY"
+
+runcmd:
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --authkey ${tailscale_auth_key} --reset
+  - systemctl enable --now docker
