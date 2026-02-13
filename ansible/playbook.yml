@@ -1,0 +1,7 @@
+- name: Configure Nomad and Consul Cluster
+  hosts: all
+  become: true
+  roles:
+    - common
+    - nomad
+    - consul

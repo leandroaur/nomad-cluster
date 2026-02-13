@@ -1,0 +1,66 @@
+---
+- name: Create Consul configuration directory
+  file:
+    path: /etc/consul.d
+    state: directory
+    mode: '0755'
+
+- name: Create Consul data directory
+  file:
+    path: /opt/consul
+    state: directory
+    mode: '0755'
+
+- name: Deploy Consul configuration
+  template:
+    src: consul.hcl.j2
+    dest: /etc/consul.d/consul.hcl
+    mode: '0644'
+
+- name: Download Consul binary
+  get_url:
+    url: "https://releases.hashicorp.com/consul/1.15.0/consul_1.15.0_linux_amd64.zip"
+    dest: /tmp/consul.zip
+
+- name: Unzip Consul binary
+  unarchive:
+    src: /tmp/consul.zip
+    dest: /usr/local/bin/
+    remote_src: true
+
+- name: Ensure Consul binary is executable
+  file:
+    path: /usr/local/bin/consul
+    mode: '0755'
+
+- name: Create Consul systemd service file
+  copy:
+    dest: /etc/systemd/system/consul.service
+    content: |
+      [Unit]
+      Description=Consul
+      Documentation=https://www.consul.io/docs/
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
+      ExecReload=/bin/kill -HUP $MAINPID
+      KillMode=process
+      KillSignal=SIGINT
+      Restart=on-failure
+      LimitNOFILE=65536
+      TasksMax=infinity
+      Delegate=yes
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd to apply Consul service
+  command: systemctl daemon-reload
+
+- name: Enable and start Consul service
+  systemd:
+    name: consul
+    state: started
+    enabled: true

@@ -1,0 +1,66 @@
+---
+- name: Create Nomad configuration directory
+  file:
+    path: /etc/nomad.d
+    state: directory
+    mode: '0755'
+
+- name: Create Nomad data directory
+  file:
+    path: /opt/nomad
+    state: directory
+    mode: '0755'
+
+- name: Deploy Nomad configuration
+  template:
+    src: nomad.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    mode: '0644'
+
+- name: Download Nomad binary
+  get_url:
+    url: "https://releases.hashicorp.com/nomad/1.9.4/nomad_1.9.4_linux_amd64.zip"
+    dest: /tmp/nomad.zip
+
+- name: Unzip Nomad binary
+  unarchive:
+    src: /tmp/nomad.zip
+    dest: /usr/local/bin/
+    remote_src: true
+
+- name: Ensure Nomad binary is executable
+  file:
+    path: /usr/local/bin/nomad
+    mode: '0755'
+
+- name: Create Nomad systemd service file
+  copy:
+    dest: /etc/systemd/system/nomad.service
+    content: |
+      [Unit]
+      Description=Nomad
+      Documentation=https://www.nomadproject.io/docs/
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      ExecStart=/usr/local/bin/nomad agent -config=/etc/nomad.d
+      ExecReload=/bin/kill -HUP $MAINPID
+      KillMode=process
+      KillSignal=SIGINT
+      Restart=on-failure
+      LimitNOFILE=65536
+      TasksMax=infinity
+      Delegate=yes
+
+      [Install]
+      WantedBy=multi-user.target
+      
+- name: Enable and start Nomad service
+  systemd:
+    name: nomad
+    state: started
+    enabled: true
+
+- name: Reload systemd to apply Nomad service
+  command: systemctl daemon-reload

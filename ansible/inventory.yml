@@ -1,0 +1,25 @@
+all:
+  hosts:
+    nomad-server-10:
+      ansible_host: 10.0.0.10
+    nomad-server-11:
+      ansible_host: 10.0.0.11
+    nomad-server-12:
+      ansible_host: 10.0.0.12
+    nomad-client-13:
+      ansible_host: 10.0.0.13
+    nomad-client-14:
+      ansible_host: 10.0.0.14
+    nomad-client-15:
+      ansible_host: 10.0.0.15
+  children:
+    servers:
+      hosts:
+        nomad-server-10:
+        nomad-server-11:
+        nomad-server-12:
+    clients:
+      hosts:
+        nomad-client-13:
+        nomad-client-14:
+        nomad-client-15:

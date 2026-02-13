@@ -1,0 +1,63 @@
+---
+- name: Install required dependencies for Docker
+  package:
+    name:
+      - dnf-plugins-core
+      - curl
+      - unzip
+      - vim
+      - jq
+      - python3
+      - python3-pip
+      - net-tools
+    state: present
+
+- name: Remove podman-docker if it exists
+  package:
+    name: podman-docker
+    state: absent
+
+- name: Add Docker's official repository
+  ansible.builtin.command:
+    cmd: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+
+- name: Install Docker
+  package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+
+- name: Enable and start Docker
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Install docker-compose using pip
+  pip:
+    name: docker-compose
+    executable: pip3
+
+# - name: Configure firewall rules
+#   firewalld:
+#     port: "{{ item }}"
+#     permanent: true
+#     state: enabled
+#   with_items:
+#     - 22/tcp
+#     - 8300-8302/tcp
+#     - 8301-8302/udp
+#     - 8500/tcp
+#     - 8600/tcp
+#     - 8600/udp
+#     - 4646-4648/tcp
+#     - 4648/udp
+
+# - name: Reload firewalld
+#   service:
+#     name: firewalld
+#     state: reloaded
